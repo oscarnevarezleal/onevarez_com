@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-32JF551BJD"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-32JF551BJD');
+</script>
+<title>ONE VAREZ · Oscar Nevarez</title>
+<link rel="canonical" href="https://www.onevarez.com/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ONE VAREZ · Oscar Nevarez">
+<meta property="og:description" content="Oscar Nevarez leads the way digital products are conceived, built and transformed, from product direction and architecture to hands-on engineering.">
+<meta property="og:url" content="https://www.onevarez.com/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:site" content="@wownevarez">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='4' width='24' height='24' fill='%23ffb81c' stroke='%23101a2b' stroke-width='4'/%3E%3C/svg%3E">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Oscar Nevarez","url":"https://www.onevarez.com/","email":"mailto:oscar@onevarez.com","jobTitle":"Engineering leader","sameAs":["https://onevarez.dev","https://github.com/oscarnevarezleal","https://www.linkedin.com/in/oscarnevarezleal","https://x.com/wownevarez","https://oscar-nevarez.medium.com/"]}</script>
+<meta name="description" content="Oscar Nevarez leads the way digital products are conceived, built and transformed, from product direction and architecture to hands-on engineering.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a personal, first-person page. Big type up top, services as a ruled table, past roles styled like shipping manifests. */
+:root {
+  --paper: #eceee9;
+  --sheet: #f7f8f5;
+  --ink: #101a2b;
+  --ink-2: #4a5466;
+  --rule: #c9cec6;
+  --cobalt: #2a46e8;
+  --signal: #ffb81c;
+  --signal-ink: #101a2b;
+  --ok: #1f8a5b;
+  --display: "Archivo", "Arial Narrow", Arial, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --step--1: .8125rem; --step-0: 1rem; --step-1: 1.25rem; --step-2: 1.75rem; --step-3: clamp(2rem, 4.4vw, 3.25rem); --step-4: clamp(2.6rem, 7vw, 5.6rem);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0c1322; --sheet: #121b2e; --ink: #e9ece6; --ink-2: #9aa4b6; --rule: #26324a;
+    --cobalt: #7f95ff; --signal: #ffc23d; --signal-ink: #0c1322; --ok: #46c08a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0c1322; --sheet: #121b2e; --ink: #e9ece6; --ink-2: #9aa4b6; --rule: #26324a;
+  --cobalt: #7f95ff; --signal: #ffc23d; --signal-ink: #0c1322; --ok: #46c08a; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 var(--step-0)/1.6 var(--body); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: inherit; text-decoration-color: var(--cobalt); text-underline-offset: 3px; }
+a:hover { color: var(--cobalt); }
+:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 3px; border-radius: 3px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; line-height: 1; }
+h1 { font-size: var(--step-4); font-weight: 800; font-stretch: 112%; letter-spacing: -0.02em; }
+h2 { font-size: var(--step-3); font-weight: 750; font-stretch: 108%; letter-spacing: -0.015em; }
+h3 { font-size: var(--step-1); font-weight: 700; font-stretch: 100%; line-height: 1.2; }
+p { margin: 0; }
+.label { font: 500 var(--step--1)/1.3 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
+.muted { color: var(--ink-2); }
+
+/* top bar */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); }
+.bar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; flex-wrap: wrap; }
+.mark { font: 800 1.05rem/1 var(--display); font-stretch: 125%; letter-spacing: .02em; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+.mark i { width: 14px; height: 14px; background: var(--signal); border: 2px solid var(--ink); display: inline-block; }
+.bar nav { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; font: 500 var(--step--1) var(--mono); text-transform: uppercase; letter-spacing: .06em; }
+.bar nav a { text-decoration: none; color: var(--ink-2); }
+.bar nav a:hover { color: var(--ink); }
+.lang { display: inline-flex; border: 1px solid var(--rule); border-radius: 999px; overflow: hidden; }
+.lang button { font: inherit; background: none; border: 0; color: var(--ink-2); padding: 4px 10px; cursor: pointer; }
+.lang button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+@media (max-width: 640px) { .bar nav .hide-sm { display: none; } }
+
+/* hero */
+.hero { padding-block: clamp(56px, 10vw, 120px) clamp(24px, 6vw, 56px); }
+.hero .label { color: var(--cobalt); }
+.hero-copy { display: grid; gap: 22px; }
+.now { font: 500 var(--step--1)/1.4 var(--mono); }
+.now a { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink-2); }
+.now a::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); flex: none; }
+.now a:hover { color: var(--cobalt); }
+.hero h1 { max-width: 19ch; }
+.hero h1 em { font-style: normal; color: var(--cobalt); }
+.hero .lede { font-size: var(--step-1); max-width: 54ch; color: var(--ink-2); }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 10px; padding: 13px 20px; font: 600 var(--step-0) var(--body); border-radius: 4px; text-decoration: none; border: 2px solid var(--ink); background: var(--ink); color: var(--paper); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+.btn:hover { color: var(--paper); transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--signal); }
+.btn.ghost { background: transparent; color: var(--ink); }
+.btn.ghost:hover { color: var(--ink); }
+
+/* sections */
+section.block { padding-block: 88px 0; }
+.sec-head { display: grid; gap: 14px; margin-bottom: 36px; max-width: 62ch; }
+
+.services { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0; border-top: 2px solid var(--ink); }
+.service { padding: 24px 24px 28px 0; display: grid; gap: 12px; align-content: start; border-bottom: 1px solid var(--rule); min-width: 0; }
+.service + .service { padding-left: 24px; border-left: 1px solid var(--rule); }
+@media (max-width: 900px) { .service + .service { padding-left: 0; border-left: 0; } }
+.service .gets { font-size: .95rem; padding-left: 14px; border-left: 3px solid var(--signal); }
+.service ul { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: .95rem; }
+
+/* case studies as manifests */
+.cases { display: grid; gap: 20px; }
+.manifest { background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; display: grid; grid-template-columns: 260px 1fr; overflow: hidden; }
+.manifest aside { background: var(--ink); color: var(--paper); padding: 22px; display: grid; gap: 14px; align-content: start; }
+.manifest aside .label { color: color-mix(in srgb, var(--paper) 65%, var(--ink)); }
+.manifest dl { margin: 0; display: grid; gap: 12px; }
+.manifest dt { font: 500 .72rem var(--mono); text-transform: uppercase; letter-spacing: .08em; opacity: .7; }
+.manifest dd { margin: 0; font-weight: 600; }
+.manifest .body { padding: 24px 28px; display: grid; gap: 14px; min-width: 0; }
+.manifest .body h3 { font-size: var(--step-2); font-stretch: 110%; }
+.manifest ul:not(.chips) { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0; }
+.chips li { font: 500 .75rem var(--mono); border: 1px solid var(--rule); border-radius: 3px; padding: 2px 7px; color: var(--ink-2); }
+@media (max-width: 760px) { .manifest { grid-template-columns: 1fr; } }
+
+/* products */
+.product { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: center; background: var(--ink); color: var(--paper); border-radius: 6px; padding: 36px; }
+.product .label { color: var(--signal); }
+.product p { color: color-mix(in srgb, var(--paper) 78%, var(--ink)); }
+.product .btn { background: var(--signal); color: var(--signal-ink); border-color: var(--signal); }
+.product .btn:hover { color: var(--signal-ink); box-shadow: 4px 4px 0 var(--paper); }
+.product .side { display: grid; gap: 12px; }
+.product .side a { display: flex; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid color-mix(in srgb, var(--paper) 22%, var(--ink)); text-decoration: none; }
+.product .side a:hover { color: var(--signal); }
+@media (max-width: 800px) { .product { grid-template-columns: 1fr; padding: 24px; } }
+
+/* about + contact */
+.about { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+.about p + p { margin-top: 14px; }
+@media (max-width: 800px) { .about { grid-template-columns: 1fr; } }
+.contact { margin-top: 88px; border-top: 2px solid var(--ink); padding-block: 56px 72px; display: grid; gap: 22px; }
+.contact h2 { font-size: var(--step-4); font-stretch: 115%; }
+.email { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.email code { font: 500 var(--step-1) var(--mono); background: var(--sheet); border: 1px solid var(--rule); padding: 10px 14px; border-radius: 4px; user-select: all; }
+.copied { font: 500 var(--step--1) var(--mono); color: var(--ok); min-width: 6ch; }
+.social { display: flex; gap: 18px; flex-wrap: wrap; font: 500 var(--step--1) var(--mono); text-transform: uppercase; letter-spacing: .06em; }
+footer { border-top: 1px solid var(--rule); }
+footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-block: 20px; font-size: .875rem; color: var(--ink-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .btn { transition: none; }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="mark" href="#top"><i aria-hidden="true"></i>ONE VAREZ</a>
+    <nav aria-label="Main">
+      <a href="#services" class="hide-sm" data-i18n="nav.services">Services</a>
+      <a href="#work" class="hide-sm" data-i18n="nav.work">Work</a>
+      <a href="#contact" data-i18n="nav.contact">Contact</a>
+      <span class="lang" role="group" aria-label="Language">
+        <button type="button" id="lang-en" aria-pressed="true">EN</button>
+        <button type="button" id="lang-es" aria-pressed="false">ES</button>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <div class="hero-copy">
+      <p class="label" data-i18n="hero.eyebrow">Oscar Nevarez · Engineering leader</p>
+      <h1 data-i18n-html="hero.title">I lead the way digital products are <em>conceived, built and transformed.</em></h1>
+      <p class="lede" data-i18n="hero.lede">From the first idea to the platform that runs it: product direction, architecture and hands-on engineering, AI included. You get one person accountable for the result, from day one through every release after.</p>
+      <div class="actions">
+        <a class="btn" href="#contact" data-i18n="hero.cta">Work with me</a>
+        <a class="btn ghost" href="#work" data-i18n="hero.cta2">See my work</a>
+      </div>
+      <p class="now"><a href="#products" data-i18n="hero.now">Currently shipping Nullcolor, my screen recorder for Mac and Windows.</a></p>
+    </div>
+  </div>
+
+  <section class="block" id="services">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="label" data-i18n="svc.eyebrow">Services</p>
+        <h2 data-i18n="svc.title">Three things I'm hired for</h2>
+      </div>
+      <div class="services">
+        <article class="service">
+          <h3 data-i18n="svc.1.t">AI document pipelines</h3>
+          <p class="muted" data-i18n="svc.1.d">Proofs of delivery, invoices, CFDIs, IDs and photos come in from phones and inboxes. Models read them, check them and route them.</p>
+          <p class="gets" data-i18n="svc.1.g">You get fewer people retyping documents and faster billing.</p>
+          <ul><li>OCR + LLM extraction</li><li data-i18n="svc.1.b2">Per-document model routing</li><li data-i18n="svc.1.b3">Exception queues for humans</li></ul>
+        </article>
+        <article class="service">
+          <h3 data-i18n="svc.2.t">Internal AI agents</h3>
+          <p class="muted" data-i18n="svc.2.d">An assistant your team asks in Slack. It answers from your own databases and APIs, with permissions and audit logs.</p>
+          <p class="gets" data-i18n="svc.2.g">You get answers in seconds instead of a ticket to the data team.</p>
+          <ul><li data-i18n="svc.2.b1">MCP servers and tool use</li><li data-i18n="svc.2.b2">Slack and voice interfaces</li><li data-i18n="svc.2.b3">Evals before launch</li></ul>
+        </article>
+        <article class="service">
+          <h3 data-i18n="svc.3.t">Cloud and data platforms</h3>
+          <p class="muted" data-i18n="svc.3.d">Serverless and container platforms on AWS and GCP, written as code, plus analytics your clients can log into.</p>
+          <p class="gets" data-i18n="svc.3.g">You get a platform your team can trust in production.</p>
+          <ul><li>AWS · CDK · Lambda · Fargate</li><li>Athena · Metabase · PostgreSQL</li><li data-i18n="svc.3.b3">Multi-tenant dashboards</li></ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="work">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="label" data-i18n="work.eyebrow">Selected work</p>
+        <h2 data-i18n="work.title">Running in production</h2>
+      </div>
+      <div class="cases">
+        <article class="manifest">
+          <aside>
+            <p class="label" data-i18n="m.shipment">Case 01</p>
+            <dl>
+              <div><dt data-i18n="m.client">Client</dt><dd>Kamina GO · Grupo Traxión</dd></div>
+              <div><dt data-i18n="m.role">Role</dt><dd>Tech Lead Manager</dd></div>
+              <div><dt data-i18n="m.volume">Volume</dt><dd data-i18n="c1.vol">5,000+ movements / day</dd></div>
+            </dl>
+          </aside>
+          <div class="body">
+            <h3 data-i18n="c1.t">AI for a freight marketplace</h3>
+            <p class="muted" data-i18n="c1.d">Led technology for a freight marketplace and execution platform inside one of Mexico's largest logistics groups.</p>
+            <ul>
+              <li data-i18n="c1.b1">Mobile proof-of-delivery capture with OCR and AI extraction, feeding invoicing, reconciliation and payment follow-up.</li>
+              <li data-i18n="c1.b2">Evidence system that reads audio, video and photos and feeds downstream systems.</li>
+              <li data-i18n="c1.b3">Internal AI agent across datasets and APIs, used from Slack.</li>
+              <li data-i18n="c1.b4">Multi-tenant analytics on Athena and Metabase.</li>
+            </ul>
+            <ul class="chips"><li>OCR</li><li>LLM routing</li><li>Slack agent</li><li>Athena</li><li>Metabase</li></ul>
+          </div>
+        </article>
+        <article class="manifest">
+          <aside>
+            <p class="label" data-i18n="m.shipment2">Case 02</p>
+            <dl>
+              <div><dt data-i18n="m.client">Client</dt><dd>Prixz</dd></div>
+              <div><dt data-i18n="m.role">Role</dt><dd>CTO</dd></div>
+              <div><dt data-i18n="m.sector">Sector</dt><dd data-i18n="c2.sec">Healthtech e-commerce</dd></div>
+            </dl>
+          </aside>
+          <div class="body">
+            <h3 data-i18n="c2.t">From last-mile delivery to digital pharmacy</h3>
+            <p class="muted" data-i18n="c2.d">Mexico's first online-only pharmacy: dark-store fulfilment, its own site and app, plus Amazon and Mercado Libre storefronts.</p>
+            <ul>
+              <li data-i18n="c2.b1">Led engineering as the company grew from a last-mile provider into a pharmacy.</li>
+              <li data-i18n="c2.b2">Owned architecture, platform and hiring.</li>
+            </ul>
+            <ul class="chips"><li>E-commerce</li><li>Fulfilment</li><li>Marketplaces</li></ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="products">
+    <div class="wrap">
+      <div class="product">
+        <div style="display:grid;gap:14px">
+          <p class="label" data-i18n="pr.eyebrow">I also ship my own software</p>
+          <h2>Nullcolor</h2>
+          <p data-i18n="pr.d">A native Mac and Windows app that records your screen and webcam together, with a built-in editor and 4K export. It runs on Kineto, a Rust video engine I open-sourced.</p>
+          <div><a class="btn" href="https://nullcolor.app" rel="noopener" data-i18n="pr.cta">Try Nullcolor ↗</a></div>
+        </div>
+        <div class="side">
+          <a href="https://onevarez.dev" rel="noopener"><span data-i18n="pr.l1">Everything I've built</span><span>onevarez.dev ↗</span></a>
+          <a href="https://github.com/onevarez/kineto-engine" rel="noopener"><span>Kineto engine</span><span>GitHub ↗</span></a>
+          <a href="https://github.com/oscarnevarezleal/gh-cms" rel="noopener"><span>gh-cms · 179★</span><span>GitHub ↗</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="about">
+    <div class="wrap about">
+      <div class="sec-head" style="margin:0">
+        <p class="label" data-i18n="a.eyebrow">About</p>
+        <h2 data-i18n="a.title">Hi, I'm Oscar.</h2>
+      </div>
+      <div>
+        <p data-i18n="a.p1">I've written software for more than twenty years, mostly in TypeScript, Node and Python, and lately Rust for desktop apps and AI agents. I was CTO at Prixz and, most recently, Tech Lead Manager at Kamina GO, part of Grupo Traxión.</p>
+        <p class="muted" data-i18n="a.p2">I work in Spanish and English, remotely with teams across the Americas.</p>
+      </div>
+    </div>
+
+    <div class="wrap contact" id="contact">
+      <p class="label" data-i18n="c.eyebrow">Contact</p>
+      <h2 data-i18n="c.title">Tell me what you're building.</h2>
+      <p class="muted" style="max-width:56ch" data-i18n="c.d">Send me a few lines about the project and where you're stuck. I reply to every message.</p>
+      <div class="email">
+        <a href="mailto:oscar@onevarez.com" style="text-decoration:none"><code id="email">oscar@onevarez.com</code></a>
+        <button class="btn" type="button" id="copy" data-i18n="c.copy">Copy email</button>
+        <span class="copied" id="copied" aria-live="polite"></span>
+      </div>
+      <div class="social">
+        <a href="https://www.linkedin.com/in/oscarnevarezleal" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/oscarnevarezleal" rel="noopener">GitHub</a>
+        <a href="https://x.com/wownevarez" rel="noopener">X</a>
+        <a href="https://oscar-nevarez.medium.com/" rel="noopener">Medium</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="year">2026</span> ONE VAREZ · Oscar Nevarez</span>
+    <span>Mexico City · <a href="https://onevarez.dev" rel="noopener">onevarez.dev</a></span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  /* ---------- i18n ---------- */
+  const ES = {
+    "nav.services": "Servicios", "nav.work": "Trabajo", "nav.contact": "Contacto",
+    "hero.eyebrow": "Oscar Nevarez · Líder de ingeniería",
+    "hero.title": "Lidero la forma en que los productos digitales <em>se conciben, se construyen y se transforman.</em>",
+    "hero.lede": "De la primera idea a la plataforma que la sostiene: dirección de producto, arquitectura e ingeniería práctica, IA incluida. Tienes a una sola persona responsable del resultado, desde el primer día y en cada versión que sigue.", "hero.now": "Ahora mismo lanzando Nullcolor, mi grabador de pantalla para Mac y Windows.",
+    "hero.cta": "Trabajemos juntos", "hero.cta2": "Ver mi trabajo",
+    "svc.eyebrow": "Servicios", "svc.title": "Tres cosas para las que me contratan",
+    "svc.1.t": "Pipelines de documentos con IA", "svc.1.d": "Evidencias de entrega, facturas, CFDIs, identificaciones y fotos llegan desde celulares y correos. Los modelos los leen, los validan y los enrutan.", "svc.1.g": "Menos gente capturando documentos y facturación más rápida.", "svc.1.b2": "Ruteo de modelo por tipo de documento", "svc.1.b3": "Colas de excepciones para personas",
+    "svc.2.t": "Agentes de IA internos", "svc.2.d": "Un asistente al que tu equipo le pregunta en Slack. Responde con tus propias bases de datos y APIs, con permisos y bitácora.", "svc.2.g": "Respuestas en segundos en lugar de un ticket al equipo de datos.", "svc.2.b1": "Servidores MCP y uso de herramientas", "svc.2.b2": "Interfaces en Slack y por voz", "svc.2.b3": "Evaluaciones antes de lanzar",
+    "svc.3.t": "Plataformas cloud y de datos", "svc.3.d": "Plataformas serverless y de contenedores en AWS y GCP, escritas como código, y analítica a la que tus clientes pueden entrar.", "svc.3.g": "Una plataforma en la que tu equipo puede confiar en producción.", "svc.3.b3": "Dashboards multi-cliente",
+    "work.eyebrow": "Trabajo seleccionado", "work.title": "Corriendo en producción",
+    "m.shipment": "Caso 01", "m.shipment2": "Caso 02", "m.client": "Cliente", "m.role": "Rol", "m.volume": "Volumen", "m.sector": "Sector", "m.type": "Tipo", "m.stack": "Stack",
+    "c1.vol": "5,000+ movimientos / día", "c1.t": "IA para un marketplace de carga", "c1.d": "Dirigí la tecnología de un marketplace y plataforma de ejecución de carga dentro de uno de los grupos logísticos más grandes de México.",
+    "c1.b1": "Captura móvil de evidencias de entrega con OCR y extracción con IA, conectada a facturación, conciliación y cobranza.", "c1.b2": "Sistema de evidencias que interpreta audio, video y fotos y alimenta otros sistemas.", "c1.b3": "Agente de IA interno sobre datos y APIs, usado desde Slack.", "c1.b4": "Analítica multi-cliente en Athena y Metabase.",
+    "c2.sec": "E-commerce de salud", "c2.t": "De última milla a farmacia digital", "c2.d": "La primera farmacia 100% en línea de México: dark stores, sitio y app propios, y tiendas en Amazon y Mercado Libre.", "c2.b1": "Dirigí ingeniería mientras la empresa pasó de operador de última milla a farmacia.", "c2.b2": "Responsable de arquitectura, plataforma y contratación.",
+    "pr.eyebrow": "También hago mi propio software", "pr.d": "Una app nativa para Mac y Windows que graba tu pantalla y tu cámara al mismo tiempo, con editor integrado y exportación 4K. Corre sobre Kineto, un motor de video en Rust que liberé como open source.", "pr.cta": "Probar Nullcolor ↗", "pr.l1": "Todo lo que he construido",
+    "a.eyebrow": "Sobre mí", "a.title": "Hola, soy Oscar.",
+    "a.p1": "Llevo más de veinte años escribiendo software, sobre todo en TypeScript, Node y Python, y últimamente en Rust para apps de escritorio y agentes de IA. Fui CTO en Prixz y, más recientemente, Tech Lead Manager en Kamina GO, parte de Grupo Traxión.",
+    "a.p2": "Trabajo en español e inglés, de forma remota con equipos en toda América.",
+    "c.eyebrow": "Contacto", "c.title": "Cuéntame qué estás construyendo.", "c.d": "Escríbeme unas líneas sobre el proyecto y dónde estás atorado. Respondo todos los mensajes.", "c.copy": "Copiar correo", "copied": "Copiado", "copyfail": "Selecciona y copia"
+  };
+  const EN = { copied: "Copied", copyfail: "Select and copy" };
+  document.querySelectorAll("[data-i18n]").forEach((el) => (EN[el.dataset.i18n] = el.textContent));
+  document.querySelectorAll("[data-i18n-html]").forEach((el) => (EN[el.dataset.i18nHtml] = el.innerHTML));
+  let dict = EN;
+  const setLang = (lang) => {
+    dict = lang === "es" ? ES : EN;
+    document.documentElement.lang = lang;
+    document.querySelectorAll("[data-i18n]").forEach((el) => { const v = dict[el.dataset.i18n]; if (v) el.textContent = v; });
+    document.querySelectorAll("[data-i18n-html]").forEach((el) => { const v = dict[el.dataset.i18nHtml]; if (v) el.innerHTML = v; });
+    document.getElementById("lang-en").setAttribute("aria-pressed", lang === "en");
+    document.getElementById("lang-es").setAttribute("aria-pressed", lang === "es");
+    try { localStorage.setItem("lang", lang); } catch (e) {}
+  };
+  document.getElementById("lang-en").onclick = () => setLang("en");
+  document.getElementById("lang-es").onclick = () => setLang("es");
+
+  /* ---------- copy email ---------- */
+  const copied = document.getElementById("copied");
+  document.getElementById("copy").onclick = () => {
+    const text = document.getElementById("email").textContent;
+    const fallback = () => {
+      const r = document.createRange(); r.selectNodeContents(document.getElementById("email"));
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      copied.textContent = dict.copyfail;
+    };
+    try {
+      navigator.clipboard.writeText(text).then(() => (copied.textContent = dict.copied), fallback);
+    } catch (e) { fallback(); }
+  };
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  try { if (localStorage.getItem("lang") === "es") setLang("es"); } catch (e) {}
+})();
+</script>
+</body>
+</html>
