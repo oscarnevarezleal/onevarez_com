@@ -1,6 +1,10 @@
 # onevarez.com
 
-Personal site for Oscar Nevarez (ONE VAREZ). A single static `index.html` with no build step: inline CSS and JS, Google Fonts, Google Analytics, and an EN/ES language switch.
+Personal site for Oscar Nevarez (ONE VAREZ). A static site with no build step: `index.html` with inline CSS and JS, Google Fonts, Google Analytics, and an EN/ES language switch.
+
+- Motion: GSAP (ScrollTrigger, SplitText, DrawSVG) reveals titles and drives the pinned Nullcolor timeline; anime.js handles the smaller scroll reveals and the corner readouts. Both are vendored in `vendor/` so the page has no CDN dependency.
+- `teardown/index.html` is the interactive Nullcolor frame drawing (recolor parts, toggle labels, explode the stack), built with the teardown skill from [jakubkrehel/skills](https://github.com/jakubkrehel/skills). A static copy of the drawing is inlined in `index.html`.
+- With reduced motion turned on, the page shows every section in its final state.
 
 The builder portfolio lives at [onevarez.dev](https://onevarez.dev) ([repo](https://github.com/oscarnevarezleal/onevarez.dev)).
 
