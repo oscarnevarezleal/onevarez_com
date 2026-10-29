@@ -4,7 +4,7 @@
 //  8 card rect in NDC (x0, y0, x1, y1)                     9 ray origin, strength  10 ray dir, unused
 // 11-14 view-projection      15-18 current station matrix  19-22 next station matrix  23-34 palette
 // Targets pack w = palette + 16 * layer + 128 * orbit (orbit 1 circles the local y axis, faster near the centre);
-// particle state packs w = palette + 16 * surface flag. Palette has 12 slots.
+// orbit 2 slides along the hero's conveyor. Particle state packs w = palette + 16 * surface flag. Palette has 12 slots.
 // A particle eases toward its goal on the current or next station (handing over as f passes its own threshold),
 // rides a divergence-free flow field that swells during a flight, and every fourth particle can leave its sculpture
 // to rebuild the active card: its outline and a dot grid behind the text, placed by unprojecting the card's screen rect.
@@ -45,6 +45,7 @@ void main() {
     float lv = floor(rest / 16.0); pal = rest - lv * 16.0;
     vec3 l = tg.xyz; if (lv > 0.0) { l.y += (lv - 3.5) * U[7].y * 0.5; }
     if (orb == 1.0) { float a = t * 1.1 / pow(max(length(l.xz), 0.6), 1.5), c = cos(a), sn = sin(a); l.xz = vec2(c * l.x - sn * l.z, sn * l.x + c * l.z); }
+    if (orb == 2.0) { l.x = -2.4 + mod(l.x + 2.4 + t * 0.26, 4.95); }
     goal = xf(useNext ? 19 : 15, l);
     if ((i & 3u) == 0u && U[7].x > 0.05 + 0.9 * h2) {
       uint j = i >> 2u, M = N >> 2u, Mp = M * 3u / 10u;
@@ -153,6 +154,7 @@ fn sim(@builtin(global_invocation_id) gid: vec3u) {
     let lv = floor(rest / 16.0); pal = rest - lv * 16.0;
     var l = tg.xyz; if (lv > 0.0) { l.y += (lv - 3.5) * U[7].y * 0.5; }
     if (orb == 1.0) { let a = t * 1.1 / pow(max(length(l.xz), 0.6), 1.5); let c = cos(a); let sn = sin(a); l = vec3f(c * l.x - sn * l.z, l.y, sn * l.x + c * l.z); }
+    if (orb == 2.0) { l.x = -2.4 + (l.x + 2.4 + t * 0.26) % 4.95; }
     goal = xf(select(15u, 19u, useNext), l);
     if ((i & 3u) == 0u && U[7].x > 0.05 + 0.9 * h2) {
       let j = i >> 2u; let M = N >> 2u; let Mp = M * 3u / 10u;

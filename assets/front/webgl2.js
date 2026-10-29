@@ -76,7 +76,7 @@ export function create(canvas, N) {
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.clearColor(clear[0], clear[1], clear[2], 1);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      // Depth lets the black hole's event horizon hide the disk behind it.
+      // Depth keeps the near parts of a sculpture in front of the far ones.
       gl.enable(gl.DEPTH_TEST);
       gl.depthFunc(gl.LESS);
       gl.enable(gl.BLEND);

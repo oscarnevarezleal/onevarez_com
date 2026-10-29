@@ -8,7 +8,7 @@ Every section is a station in one particle space. Scrolling through the gap betw
 
 | Station | Sculpture |
 | --- | --- |
-| Hero | A black hole: an orbiting accretion disk, its far side lensed into a ring around the shadow |
+| Hero | A software assembly line: raw dust becomes clusters, cubes and finally UI cards as it passes design, build and ship |
 | Services | Documents feeding a model router, then a platform rack |
 | Work | Freight arcs over a terrain grid, and a capsule for the pharmacy |
 | Nullcolor | The six layers Kineto composites, lifting apart as the timeline plays |

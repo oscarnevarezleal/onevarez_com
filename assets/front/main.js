@@ -1,7 +1,7 @@
 // The front: every section is a station in one 3D space. Scrolling through the gap between two sections flies the
 // camera from one station to the next on a swirling path, while the particles hand over from one sculpture to the
 // other and a share of them rebuilds the next card on screen before its content fades in.
-import { buildTargets, STATIONS, HERO_PITCH } from "./shapes.js";
+import { buildTargets, STATIONS } from "./shapes.js";
 import { UCOUNT } from "./shaders.js";
 
 const root = document.documentElement;
@@ -12,7 +12,7 @@ const cap = (n) => Math.min(n, 2 ** Math.round(Math.log2(Math.max(1024, +params.
 
 const CODES = ["ONV", "SVC", "WRK", "NCL", "ABT", "CTC"];
 // Each station's sculpture is posed (pitch, yaw, roll) so its best side faces the camera.
-const POSES = [[HERO_PITCH, 0, 0], [0.22, -0.25, 0], [0.42, -0.35, 0], [0.62, -0.5, 0.04], [0.08, 0.1, 0.12], [0.06, -0.15, 0]];
+const POSES = [[0.5, 0.62, 0], [0.22, -0.25, 0], [0.42, -0.35, 0], [0.62, -0.5, 0.04], [0.08, 0.1, 0.12], [0.06, -0.15, 0]];
 
 /* ---------- small vector kit ---------- */
 const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
@@ -47,10 +47,9 @@ const ST = STATIONS.map((name, k) => {
 // Station matrix (column-major): translate(T) * basis * pose(t) * scale.
 function stationMatrix(k, t, sway) {
   const s = ST[k], P = POSES[k];
-  // The black hole only breathes a little, so its lensed rings keep facing the camera.
-  const amt = k === 0 ? 0.25 : 1;
+  const amt = k === 0 ? 0.5 : 1;
   const cols = euler([P[0] + sway[1] * 0.12 * amt, P[1] + (Math.sin(t * 0.21 + k) * 0.22 + sway[0] * 0.2) * amt, P[2]]);
-  const [bx, by, bz] = s.basis, sc = 0.92;
+  const [bx, by, bz] = s.basis, sc = k === 0 ? 0.72 : 0.92;
   const m = new Float32Array(16);
   cols.forEach((c, i) => {
     const w = add(add(mul(bx, c[0]), mul(by, c[1])), mul(bz, c[2]));
@@ -140,7 +139,7 @@ export async function start() {
   if (!gpu) return staticReason(failures.join(" · ") || "no WebGL2");
   const N = gpu.N;
   gpu.setTargets(buildTargets(N));
-  // Start as a wide cloud around the first station, so the intro condenses into the black hole.
+  // Start as a wide cloud around the first station, so the intro condenses into the assembly line.
   const init = new Float32Array(N * 4);
   for (let i = 0; i < N; i++) {
     const z = Math.random() * 2 - 1, a = Math.random() * 6.283, r = 6 + Math.random() * 16, q = Math.sqrt(1 - z * z);

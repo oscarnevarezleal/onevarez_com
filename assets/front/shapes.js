@@ -1,8 +1,9 @@
 // Station sculptures: one particle target per particle per station, in station-local space (about ±2.4 units).
 // Each target is [x, y, z, w]. w packs the colour, the Nullcolor layer and an orbit flag: w = palette + 16 * (layer + 1)
-// + 128 * orbit. Orbiting targets circle the local y axis in the shader, faster near the centre. A negative w marks
+// + 128 * orbit. Orbit 1 circles the local y axis in the shader (faster near the centre); orbit 2 slides along the
+// hero's conveyor. A negative w marks
 // world-space dust (palette = -w - 1), which stays put across stations and gives the flights depth.
-// Palette: 0 ink, 1 signal, 2 lime, 3 muted, 4 slate, 5 blue, 6 green, 7 sand, 8 void, 9 amber, 10 hot, 11 spare.
+// Palette: 0 ink, 1 signal, 2 lime, 3 muted, 4 slate, 5 blue, 6 green, 7 sand, 8-11 spare.
 
 export const STATIONS = ["hero", "services", "work", "nullcolor", "about", "contact"];
 
@@ -48,33 +49,51 @@ const bez = (a, b, c, d, t) => {
 };
 const W = (p, pal, level = 0, orbit = 0) => [p[0], p[1], p[2], pal + 16 * level + 128 * orbit];
 
-// 0 · Hero: a black hole. An orbiting accretion disk seen almost edge-on, the far side of the disk lensed into a ring
-// around the shadow, a thin photon ring, and the event horizon itself as a dark disc that hides what is behind it.
-// The station is pitched by HERO_PITCH, so the lensed rings are tilted back by the same angle to face the camera.
-export const HERO_PITCH = 0.07;
+// 0 · Hero: a software assembly line. Raw dust drifts onto a belt, passes three gantries (design, build, ship) and
+// leaves as rough clusters, then cubes, then finished UI cards stacked at the end. The belt's slats and the signal
+// packets carry orbit flag 2, which slides them along the belt in the shader.
 function hero() {
-  const cp = Math.cos(-HERO_PITCH), sp = Math.sin(-HERO_PITCH);
-  const facing = ([x, y, z]) => [x, y * cp - z * sp, y * sp + z * cp];
-  const disk = (r) => {
-    const rad = 1.5 + 2.4 * Math.pow(r(), 2.2), a = r() * Math.PI * 2;
-    const pal = rad < 1.95 ? 10 : rad < 2.55 ? 9 : rad < 3.15 ? 1 : 3;
-    return W([Math.cos(a) * rad, jit(r, 0.006 + 0.006 * rad), Math.sin(a) * rad], pal, 0, 1);
+  const X0 = -3.2, X1 = 3.4, HW = 0.42;
+  const gantries = [-1.35, 0.45, 2.1];
+  const rails = (r) => W([X0 + r() * (X1 - X0), 0, (r() < 0.5 ? -1 : 1) * HW + jit(r, 0.008)], 0);
+  const slats = (r) => { const k = Math.floor(r() * 26); return W([X0 + k * 0.254 + jit(r, 0.006), -0.01, jit(r, HW)], 3, 0, 2); };
+  const legs = (r) => { const x = X0 + 0.3 + Math.floor(r() * 5) * 1.5, z = (r() < 0.5 ? -1 : 1) * HW; return W([x, -r() * 0.35, z], 3); };
+  const gantry = (r) => {
+    const x = gantries[Math.floor(r() * 3)], m = r(), h = 0.95, z = HW + 0.12;
+    if (m < 0.5) return W([x + jit(r, 0.008), r() * h, (r() < 0.5 ? -1 : 1) * z], 0);
+    if (m < 0.75) return W([x + jit(r, 0.008), h, jit(r, z)], 0);
+    if (m < 0.9) return W([x + jit(r, 0.12), h - 0.05 - r() * 0.16, jit(r, 0.14)], 0);
+    return W([x + jit(r, 0.05), r() * h * 0.85, jit(r, 0.05)], 1);
   };
-  const lensed = (r) => {
-    // The far half of the disk, bent over the top and under the bottom of the shadow.
-    const u = r(), rad = 1.1 + 0.55 * u * u, a = r() * Math.PI * 2;
-    const pal = rad < 1.22 ? 10 : rad < 1.4 ? 9 : 1;
-    return W(facing([Math.cos(a) * rad, Math.sin(a) * rad * 1.02, -0.05]), pal);
+  const dust = (r) => {
+    const x = X0 - 0.3 + Math.pow(r(), 0.7) * 1.6, spread = Math.max(0.04, (-1.4 - x) * 0.3);
+    const u = r();
+    return W([x, 0.08 + Math.abs(jit(r, spread)) * 1.2, jit(r, HW * 0.6 + spread)], u < 0.62 ? 0 : u < 0.88 ? 1 : 2);
   };
-  return mixer([
-    [0.44, disk],
-    [0.2, lensed],
-    [0.05, (r) => W(facing(ring(r, [0, 0, -0.04], 1.05, [1, 0, 0], [0, 1, 0], 0.006)), 10)],
-    // The shadow is a flat disc facing the camera: cheaper than a sphere for the same coverage, and it still
-    // sits in front of the far side of the disk and behind the near side.
-    [0.24, (r) => { const a = r() * Math.PI * 2, q = Math.sqrt(r()) * 1.0; return W(facing([Math.cos(a) * q, Math.sin(a) * q, 0]), 8); }],
-    [0.07, (r) => W(sphere(r, [0, 0, 0], 4.5 + r() * 2.5), 3)],
+  const cluster = (r) => { const cx = [-0.75, -0.25][Math.floor(r() * 2)], p = sphere(r, [cx, 0.24, 0], 0.17 + r() * 0.05); return W(p, r() < 0.2 ? 1 : 0); };
+  const cube = (r) => {
+    const cx = [1.0, 1.5][Math.floor(r() * 2)], h = 0.21, f = Math.floor(r() * 6), a = jit(r, h), b = jit(r, h);
+    const p = [[h, a, b], [-h, a, b], [a, h, b], [a, -h, b], [a, b, h], [a, b, -h]][f];
+    return W([cx + p[0], 0.22 + p[1], p[2]], f === 2 ? 2 : 0);
+  };
+  const card = (r) => {
+    // A standing UI card: outline, title bar, text lines and a signal button. Two singles and a stack of three.
+    const slots = [[2.55, 0], [2.95, 0], [3.3, 0], [3.3, 0.09], [3.3, 0.18]];
+    const [cx, lift] = slots[Math.floor(r() * slots.length)], w = 0.2, h = 0.28, m = r();
+    let x, y, pal = 0;
+    if (m < 0.4) { const e = r() * 4, f = r() * 2 - 1; [x, y] = e < 1 ? [f * w, h] : e < 2 ? [f * w, -h] : e < 3 ? [w, f * h] : [-w, f * h]; }
+    else if (m < 0.55) { x = jit(r, w); y = h - 0.06; }
+    else if (m < 0.85) { x = -w + 0.04 + r() * w; y = h - 0.14 - Math.floor(r() * 3) * 0.08; pal = 3; }
+    else { x = w - 0.14 + r() * 0.1; y = -h + 0.07 + jit(r, 0.02); pal = 1; }
+    return W([cx + jit(r, 0.004), 0.3 + h + y + lift * 3.2, x], pal);
+  };
+  const packets = (r) => { const k = Math.floor(r() * 9); return W([X0 + k * 0.73 + jit(r, 0.025), 0.03 + jit(r, 0.02), jit(r, 0.025)], 1, 0, 2); };
+  // The line is laid out on a long x axis, then squeezed by 0.75 so it fits beside the card.
+  const line = mixer([
+    [0.09, rails], [0.12, slats], [0.03, legs], [0.13, gantry], [0.2, dust],
+    [0.08, cluster], [0.1, cube], [0.17, card], [0.04, packets], [0.04, (r) => W(sphere(r, [0, 0, 0], 4.5 + r() * 2.5), 3)],
   ]);
+  return (r) => { const p = line(r); p[0] *= 0.75; return p; };
 }
 
 // 1 · Services: documents in, a model router in the middle, a platform rack out.
