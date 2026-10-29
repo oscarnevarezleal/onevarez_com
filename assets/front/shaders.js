@@ -2,16 +2,18 @@
 //  0 time, dt, N, texW        1 resX, resY, dpr, pointSize   2 camPos, tanHalfFov   3 right, aspect
 //  4 up, lensX               5 forward, lensY              6 cur, next, f, flight  7 surf, explode, intro, surfDepth
 //  8 card rect in NDC (x0, y0, x1, y1)                     9 ray origin, strength  10 ray dir, unused
-// 11-14 view-projection      15-18 current station matrix  19-22 next station matrix  23-30 palette
+// 11-14 view-projection      15-18 current station matrix  19-22 next station matrix  23-34 palette
+// Targets pack w = palette + 16 * layer + 128 * orbit (orbit 1 circles the local y axis, faster near the centre);
+// particle state packs w = palette + 16 * surface flag. Palette has 12 slots.
 // A particle eases toward its goal on the current or next station (handing over as f passes its own threshold),
 // rides a divergence-free flow field that swells during a flight, and every fourth particle can leave its sculpture
 // to rebuild the active card: its outline and a dot grid behind the text, placed by unprojecting the card's screen rect.
 
-export const UCOUNT = 31;
+export const UCOUNT = 35;
 
 export const GLSL_SIM = `#version 300 es
 precision highp float; precision highp int;
-uniform vec4 U[31];
+uniform vec4 U[35];
 uniform highp sampler2D uPos, uVel, uTgt;
 layout(location = 0) out vec4 oPos;
 layout(location = 1) out vec4 oVel;
@@ -39,8 +41,10 @@ void main() {
   float K = mix(16.0, 3.5, U[6].w);
   if (tg.w < 0.0) { goal = tg.xyz; pal = -tg.w - 1.0; }
   else {
-    float lv = floor(tg.w / 8.0); pal = tg.w - lv * 8.0;
+    float orb = floor(tg.w / 128.0), rest = tg.w - orb * 128.0;
+    float lv = floor(rest / 16.0); pal = rest - lv * 16.0;
     vec3 l = tg.xyz; if (lv > 0.0) { l.y += (lv - 3.5) * U[7].y * 0.5; }
+    if (orb == 1.0) { float a = t * 1.1 / pow(max(length(l.xz), 0.6), 1.5), c = cos(a), sn = sin(a); l.xz = vec2(c * l.x - sn * l.z, sn * l.x + c * l.z); }
     goal = xf(useNext ? 19 : 15, l);
     if ((i & 3u) == 0u && U[7].x > 0.05 + 0.9 * h2) {
       uint j = i >> 2u, M = N >> 2u, Mp = M * 3u / 10u;
@@ -74,7 +78,7 @@ void main() {
   float sp = length(v.xyz);
   if (sp > 30.0) v.xyz *= 30.0 / sp;
   p.xyz += v.xyz * dt;
-  oPos = vec4(p.xyz, pal + 8.0 * flag);
+  oPos = vec4(p.xyz, pal + 16.0 * flag);
   oVel = vec4(v.xyz, 0.0);
 }`;
 
@@ -83,7 +87,7 @@ void main() { vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2
 
 export const GLSL_DRAW_VS = `#version 300 es
 precision highp float; precision highp int;
-uniform vec4 U[31];
+uniform vec4 U[35];
 uniform highp sampler2D uPos;
 out vec4 vC;
 void main() {
@@ -91,11 +95,12 @@ void main() {
   vec4 p = texelFetch(uPos, ivec2(gl_VertexID % W, gl_VertexID / W), 0);
   vec4 c = mat4(U[11], U[12], U[13], U[14]) * vec4(p.xyz, 1.0);
   gl_Position = c;
-  float flag = floor(p.w / 8.0), pal = p.w - flag * 8.0;
+  float flag = floor(p.w / 16.0), pal = p.w - flag * 16.0;
   float base = U[1].w * U[1].z;
   float sz = base * clamp(7.0 / max(c.w, 0.1), 0.55, 2.6), a = 0.85;
   if (flag == 2.0) { a = 0.42; sz = base * 1.15; }
   if (flag == 1.0) { sz = base * 1.2; }
+  if (pal > 7.5 && pal < 8.5) { sz *= 4.5; a = 1.0; }
   gl_PointSize = sz;
   vC = vec4(U[23 + int(pal + 0.5)].rgb, a);
 }`;
@@ -112,7 +117,7 @@ void main() {
 
 const WGSL_HEAD = /* wgsl */ `
 struct P { pos: vec4f, vel: vec4f };
-@group(0) @binding(0) var<uniform> U: array<vec4f, 31>;
+@group(0) @binding(0) var<uniform> U: array<vec4f, 35>;
 `;
 
 export const WGSL_SIM = WGSL_HEAD + /* wgsl */ `
@@ -144,8 +149,10 @@ fn sim(@builtin(global_invocation_id) gid: vec3u) {
   var K = mix(16.0, 3.5, U[6].w);
   if (tg.w < 0.0) { goal = tg.xyz; pal = -tg.w - 1.0; }
   else {
-    let lv = floor(tg.w / 8.0); pal = tg.w - lv * 8.0;
+    let orb = floor(tg.w / 128.0); let rest = tg.w - orb * 128.0;
+    let lv = floor(rest / 16.0); pal = rest - lv * 16.0;
     var l = tg.xyz; if (lv > 0.0) { l.y += (lv - 3.5) * U[7].y * 0.5; }
+    if (orb == 1.0) { let a = t * 1.1 / pow(max(length(l.xz), 0.6), 1.5); let c = cos(a); let sn = sin(a); l = vec3f(c * l.x - sn * l.z, l.y, sn * l.x + c * l.z); }
     goal = xf(select(15u, 19u, useNext), l);
     if ((i & 3u) == 0u && U[7].x > 0.05 + 0.9 * h2) {
       let j = i >> 2u; let M = N >> 2u; let Mp = M * 3u / 10u;
@@ -180,7 +187,7 @@ fn sim(@builtin(global_invocation_id) gid: vec3u) {
   var vel = v.xyz + acc * dt;
   let sp = length(vel);
   if (sp > 30.0) { vel *= 30.0 / sp; }
-  parts[i].pos = vec4f(p.xyz + vel * dt, pal + 8.0 * flag);
+  parts[i].pos = vec4f(p.xyz + vel * dt, pal + 16.0 * flag);
   parts[i].vel = vec4f(vel, 0.0);
 }
 
@@ -196,12 +203,13 @@ fn vs(@builtin(vertex_index) vi: u32, @builtin(instance_index) ii: u32) -> VO {
   let q = corners[vi];
   let p = partsR[ii].pos;
   var c = mat4x4f(U[11], U[12], U[13], U[14]) * vec4f(p.xyz, 1.0);
-  let flag = floor(p.w / 8.0); let pal = p.w - flag * 8.0;
+  let flag = floor(p.w / 16.0); let pal = p.w - flag * 16.0;
   let base = U[1].w * U[1].z;
   var sz = base * clamp(7.0 / max(c.w, 0.1), 0.55, 2.6);
   var a = 0.85;
   if (flag == 2.0) { a = 0.42; sz = base * 1.15; }
   if (flag == 1.0) { sz = base * 1.2; }
+  if (pal > 7.5 && pal < 8.5) { sz *= 4.5; a = 1.0; }
   let res = vec2f(U[1].x, U[1].y) * U[1].z;
   var o: VO;
   o.pos = vec4f(c.xy + q * sz / res * c.w, (c.z + c.w) * 0.5, c.w);

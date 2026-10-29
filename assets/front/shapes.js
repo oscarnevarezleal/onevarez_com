@@ -1,7 +1,8 @@
 // Station sculptures: one particle target per particle per station, in station-local space (about ±2.4 units).
-// Each target is [x, y, z, w]. w packs the colour and, for the Nullcolor plates, the layer: w = palette + 8 * (layer + 1). A negative w marks
+// Each target is [x, y, z, w]. w packs the colour, the Nullcolor layer and an orbit flag: w = palette + 16 * (layer + 1)
+// + 128 * orbit. Orbiting targets circle the local y axis in the shader, faster near the centre. A negative w marks
 // world-space dust (palette = -w - 1), which stays put across stations and gives the flights depth.
-// Palette: 0 ink, 1 signal, 2 lime, 3 muted, 4 slate, 5 blue, 6 green, 7 sand.
+// Palette: 0 ink, 1 signal, 2 lime, 3 muted, 4 slate, 5 blue, 6 green, 7 sand, 8 void, 9 amber, 10 hot, 11 spare.
 
 export const STATIONS = ["hero", "services", "work", "nullcolor", "about", "contact"];
 
@@ -45,30 +46,34 @@ const bez = (a, b, c, d, t) => {
   const s = 1 - t;
   return [0, 1, 2].map((k) => s * s * s * a[k] + 3 * s * s * t * b[k] + 3 * s * t * t * c[k] + t * t * t * d[k]);
 };
-const W = (p, pal, level = 0) => [p[0], p[1], p[2], pal + 8 * level];
+const W = (p, pal, level = 0, orbit = 0) => [p[0], p[1], p[2], pal + 16 * level + 128 * orbit];
 
-// 0 · Hero: the ONE VAREZ mark (a square with its diagonals) inside two orbit rings and a dot grid.
+// 0 · Hero: a black hole. An orbiting accretion disk seen almost edge-on, the far side of the disk lensed into a ring
+// around the shadow, a thin photon ring, and the event horizon itself as a dark disc that hides what is behind it.
+// The station is pitched by HERO_PITCH, so the lensed rings are tilted back by the same angle to face the camera.
+export const HERO_PITCH = 0.07;
 function hero() {
-  const h = 1.2, t = 0.07, d = 0.13;
-  const C = [[-h, -h], [h, -h], [h, h], [-h, h]];
-  const bars = [[C[0], C[1]], [C[1], C[2]], [C[2], C[3]], [C[3], C[0]], [C[0], C[2]], [C[1], C[3]]];
-  const lens = bars.map(([a, b]) => Math.hypot(b[0] - a[0], b[1] - a[1]));
-  const bar = (r) => {
-    let u = r() * lens.reduce((s, l) => s + l, 0), k = 0;
-    while (u > lens[k] && k < 5) u -= lens[k++];
-    const [a, b] = bars[k], f = u / lens[k];
-    const x = a[0] + (b[0] - a[0]) * f, y = a[1] + (b[1] - a[1]) * f;
-    return W([x + jit(r, t * (k > 3 ? 0.7 : 1)), y + jit(r, t * (k > 3 ? 0.7 : 1)), jit(r, d)], 0);
+  const cp = Math.cos(-HERO_PITCH), sp = Math.sin(-HERO_PITCH);
+  const facing = ([x, y, z]) => [x, y * cp - z * sp, y * sp + z * cp];
+  const disk = (r) => {
+    const rad = 1.5 + 2.4 * Math.pow(r(), 2.2), a = r() * Math.PI * 2;
+    const pal = rad < 1.95 ? 10 : rad < 2.55 ? 9 : rad < 3.15 ? 1 : 3;
+    return W([Math.cos(a) * rad, jit(r, 0.006 + 0.006 * rad), Math.sin(a) * rad], pal, 0, 1);
   };
-  const tilt = 1.15, u = [1, 0, 0], v = [0, Math.cos(tilt), Math.sin(tilt)];
-  const u2 = [Math.cos(0.9), 0, -Math.sin(0.9)], v2 = [0, 1, 0];
+  const lensed = (r) => {
+    // The far half of the disk, bent over the top and under the bottom of the shadow.
+    const u = r(), rad = 1.1 + 0.55 * u * u, a = r() * Math.PI * 2;
+    const pal = rad < 1.22 ? 10 : rad < 1.4 ? 9 : 1;
+    return W(facing([Math.cos(a) * rad, Math.sin(a) * rad * 1.02, -0.05]), pal);
+  };
   return mixer([
-    [0.5, bar],
-    [0.2, (r) => W(ring(r, [0, 0, 0], 2.05, u, v, 0.012), 1)],
-    [0.09, (r) => W(ring(r, [0, 0, 0], 1.85, u2, v2, 0.008), 3)],
-    [0.06, (r) => { const i = Math.floor(r() * 18), x = -1.2 + (i % 6) * 0.13, y = 1.5 + Math.floor(i / 6) * 0.13; return W([x + jit(r, 0.018), y + jit(r, 0.018), 0], 1); }],
-    [0.06, (r) => { const s = r() < 0.5, k = jit(r, 2.6); return W(s ? [k, 0, jit(r, 0.01)] : [0, k, jit(r, 0.01)], 3); }],
-    [0.09, (r) => W(sphere(r, [0, 0, 0], 2.9 + r() * 0.2), 3)],
+    [0.44, disk],
+    [0.2, lensed],
+    [0.05, (r) => W(facing(ring(r, [0, 0, -0.04], 1.05, [1, 0, 0], [0, 1, 0], 0.006)), 10)],
+    // The shadow is a flat disc facing the camera: cheaper than a sphere for the same coverage, and it still
+    // sits in front of the far side of the disk and behind the near side.
+    [0.24, (r) => { const a = r() * Math.PI * 2, q = Math.sqrt(r()) * 1.0; return W(facing([Math.cos(a) * q, Math.sin(a) * q, 0]), 8); }],
+    [0.07, (r) => W(sphere(r, [0, 0, 0], 4.5 + r() * 2.5), 3)],
   ]);
 }
 
@@ -161,7 +166,7 @@ function nullcolor() {
   };
   const disc = (r, cx, cz, rad) => { const a = r() * Math.PI * 2, q = Math.sqrt(r()) * rad; return [cx + Math.cos(a) * q, 0, cz + Math.sin(a) * q]; };
   const ww = PW - pad * 2, wd = PD - pad * 2;
-  const plate = (L, pal, fn) => (r) => { const p = fn(r); return [p[0], p[1] + L * 0.05 + jit(r, 0.006), p[2], pal + 8 * (L + 1)]; };
+  const plate = (L, pal, fn) => (r) => { const p = fn(r); return [p[0], p[1] + L * 0.05 + jit(r, 0.006), p[2], pal + 16 * (L + 1)]; };
   return mixer([
     [0.24, plate(0, 2, (r) => (r() < 0.25 ? outline(r, 0, 0, PW, PD) : fillRect(r, 0, 0, PW, PD)))],
     [0.14, plate(1, 4, (r) => fillRect(r, 0.08, 0.1, ww, wd))],

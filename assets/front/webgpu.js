@@ -32,7 +32,9 @@ export async function create(canvas, N) {
     vertex: { module: drawMod, entryPoint: "vs" },
     fragment: { module: drawMod, entryPoint: "fs", targets: [{ format, blend: { color: blend, alpha: blend } }] },
     primitive: { topology: "triangle-list" },
+    depthStencil: { format: "depth24plus", depthWriteEnabled: true, depthCompare: "less" },
   });
+  let depth = null;
   const drawGroup = device.createBindGroup({
     layout: drawPipe.getBindGroupLayout(0),
     entries: [{ binding: 0, resource: { buffer: ubuf } }, { binding: 1, resource: { buffer: parts } }],
@@ -55,7 +57,11 @@ export async function create(canvas, N) {
       for (let i = 0; i < N; i++) both.set(pos.subarray(i * 4, i * 4 + 4), i * 8);
       device.queue.writeBuffer(parts, 0, both);
     },
-    resize(w, h) { canvas.width = w; canvas.height = h; },
+    resize(w, h) {
+      canvas.width = w; canvas.height = h;
+      depth?.destroy();
+      depth = device.createTexture({ size: [w, h], format: "depth24plus", usage: GPUTextureUsage.RENDER_ATTACHMENT });
+    },
     frame(U, clear) {
       device.queue.writeBuffer(ubuf, 0, U);
       const enc = device.createCommandEncoder();
@@ -66,6 +72,7 @@ export async function create(canvas, N) {
       cp.end();
       const rp = enc.beginRenderPass({
         colorAttachments: [{ view: ctx.getCurrentTexture().createView(), loadOp: "clear", storeOp: "store", clearValue: { r: clear[0], g: clear[1], b: clear[2], a: 1 } }],
+        depthStencilAttachment: { view: depth.createView(), depthClearValue: 1, depthLoadOp: "clear", depthStoreOp: "discard" },
       });
       rp.setPipeline(drawPipe);
       rp.setBindGroup(0, drawGroup);

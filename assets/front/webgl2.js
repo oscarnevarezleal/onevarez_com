@@ -1,4 +1,4 @@
-// WebGL2 fallback: particle state lives in two float textures (position, velocity), stepped by a fragment shader
+// WebGL2 renderer: particle state lives in two float textures (position, velocity), stepped by a fragment shader
 // into a ping-pong pair of framebuffers, then drawn as points that fetch their position by gl_VertexID.
 import { GLSL_SIM, GLSL_QUAD, GLSL_DRAW_VS, GLSL_DRAW_FS } from "./shaders.js";
 
@@ -17,7 +17,7 @@ function program(gl, vs, fs) {
 }
 
 export function create(canvas, N) {
-  const gl = canvas.getContext("webgl2", { antialias: false, alpha: false, powerPreference: "high-performance" });
+  const gl = canvas.getContext("webgl2", { antialias: false, alpha: false, depth: true, powerPreference: "high-performance" });
   if (!gl || !gl.getExtension("EXT_color_buffer_float")) throw Error("WebGL2 float targets unavailable");
   const W = 256, H = N / W;
   const tex = (h, data) => {
@@ -64,6 +64,7 @@ export function create(canvas, N) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fb);
       gl.viewport(0, 0, W, H);
       gl.disable(gl.BLEND);
+      gl.disable(gl.DEPTH_TEST);
       gl.useProgram(sim);
       gl.uniform4fv(L.simU, U);
       bind(0, src.pos); bind(1, src.vel); bind(2, tgt);
@@ -74,7 +75,10 @@ export function create(canvas, N) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.clearColor(clear[0], clear[1], clear[2], 1);
-      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      // Depth lets the black hole's event horizon hide the disk behind it.
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LESS);
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.useProgram(draw);

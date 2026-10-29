@@ -1,7 +1,7 @@
 // The front: every section is a station in one 3D space. Scrolling through the gap between two sections flies the
 // camera from one station to the next on a swirling path, while the particles hand over from one sculpture to the
 // other and a share of them rebuilds the next card on screen before its content fades in.
-import { buildTargets, STATIONS } from "./shapes.js";
+import { buildTargets, STATIONS, HERO_PITCH } from "./shapes.js";
 import { UCOUNT } from "./shaders.js";
 
 const root = document.documentElement;
@@ -12,7 +12,7 @@ const cap = (n) => Math.min(n, 2 ** Math.round(Math.log2(Math.max(1024, +params.
 
 const CODES = ["ONV", "SVC", "WRK", "NCL", "ABT", "CTC"];
 // Each station's sculpture is posed (pitch, yaw, roll) so its best side faces the camera.
-const POSES = [[0.12, -0.3, 0], [0.22, -0.25, 0], [0.42, -0.35, 0], [0.62, -0.5, 0.04], [0.08, 0.1, 0.12], [0.06, -0.15, 0]];
+const POSES = [[HERO_PITCH, 0, 0], [0.22, -0.25, 0], [0.42, -0.35, 0], [0.62, -0.5, 0.04], [0.08, 0.1, 0.12], [0.06, -0.15, 0]];
 
 /* ---------- small vector kit ---------- */
 const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
@@ -47,7 +47,9 @@ const ST = STATIONS.map((name, k) => {
 // Station matrix (column-major): translate(T) * basis * pose(t) * scale.
 function stationMatrix(k, t, sway) {
   const s = ST[k], P = POSES[k];
-  const cols = euler([P[0] + sway[1] * 0.12, P[1] + Math.sin(t * 0.21 + k) * 0.22 + sway[0] * 0.2, P[2]]);
+  // The black hole only breathes a little, so its lensed rings keep facing the camera.
+  const amt = k === 0 ? 0.25 : 1;
+  const cols = euler([P[0] + sway[1] * 0.12 * amt, P[1] + (Math.sin(t * 0.21 + k) * 0.22 + sway[0] * 0.2) * amt, P[2]]);
   const [bx, by, bz] = s.basis, sc = 0.92;
   const m = new Float32Array(16);
   cols.forEach((c, i) => {
@@ -94,16 +96,22 @@ function viewProj(cam, aspect, tanH, ox, oy) {
 /* ---------- palette ---------- */
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
 const PAL = {
-  light: { clear: "#dcddd6", c: ["#171815", "#e2582a", "#7f9c2c", "#6d6f66", "#5f6f92", "#3f63b0", "#2f8a5c", "#a88a35"] },
-  dark: { clear: "#121310", c: ["#e4e5dd", "#f06a3a", "#c4e36f", "#8c8e85", "#8ea0c7", "#7aa2ff", "#6fd39b", "#e2c46f"] },
+  light: { clear: "#dcddd6", c: ["#171815", "#e2582a", "#7f9c2c", "#6d6f66", "#5f6f92", "#3f63b0", "#2f8a5c", "#a88a35", "#0b0c0a", "#d9822b", "#9a3412", "#171815"] },
+  dark: { clear: "#121310", c: ["#e4e5dd", "#f06a3a", "#c4e36f", "#8c8e85", "#8ea0c7", "#7aa2ff", "#6fd39b", "#e2c46f", "#000000", "#ffb35c", "#fff1d0", "#e4e5dd"] },
 };
 const darkQ = matchMedia("(prefers-color-scheme: dark)");
+for (const p of Object.values(PAL)) { p.rgb = p.c.map(hex); p.bg = hex(p.clear); }
 const theme = () => (root.dataset.theme || (darkQ.matches ? "dark" : "light")) === "dark" ? PAL.dark : PAL.light;
 
-// Static fallback: say why in the hero readout, so a screenshot is enough to diagnose it.
-export function staticReason(text) {
+// Static fallback: say why in the hero readout, and tell the visitor in a notice (with a way into the 3D version
+// when it is only their reduced-motion setting that turned it off).
+export function staticReason(text, kind = "gpu") {
   const el = document.getElementById("rd-gpu");
   if (el) { el.dataset.live = "1"; el.textContent = `Static render · ${text}`; }
+  const box = document.getElementById("notice");
+  if (!box || kind === "off") return;
+  box.querySelectorAll("[data-kind]").forEach((n) => (n.hidden = n.dataset.kind !== kind));
+  box.hidden = false;
 }
 
 /* ---------- backend ---------- */
@@ -126,13 +134,13 @@ async function backend() {
 }
 
 export async function start() {
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches && params.get("motion") !== "on") return staticReason("reduced motion is on");
-  if (params.get("gl") === "off") return staticReason("?gl=off");
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches && params.get("motion") !== "on") return staticReason("reduced motion is on", "motion");
+  if (params.get("gl") === "off") return staticReason("?gl=off", "off");
   const gpu = await backend();
   if (!gpu) return staticReason(failures.join(" · ") || "no WebGL2");
   const N = gpu.N;
   gpu.setTargets(buildTargets(N));
-  // Start as a wide cloud around the first station, so the intro condenses into the mark.
+  // Start as a wide cloud around the first station, so the intro condenses into the black hole.
   const init = new Float32Array(N * 4);
   for (let i = 0; i < N; i++) {
     const z = Math.random() * 2 - 1, a = Math.random() * 6.283, r = 6 + Math.random() * 16, q = Math.sqrt(1 - z * z);
@@ -146,6 +154,12 @@ export async function start() {
   const flights = sections.map((s) => s.previousElementSibling?.classList.contains("flight") ? s.previousElementSibling : null);
   const $ = (id) => document.getElementById(id);
   const ui = { pct: $("scrollp"), sec: $("secname"), gpu: $("rd-gpu"), cam: $("rd-cam"), map: $("map-cam"), cone: $("map-cone"), tl: $("tl"), tc: $("tc"), fr: $("fr") };
+  const tracks = ui.tl ? [...ui.tl.querySelectorAll(".trk[data-layer]")].map((el) => [el, parseFloat(el.style.getPropertyValue("--s"))]) : [];
+  const xyzEls = flights.filter(Boolean).map((fl) => fl.querySelector(".fl-xyz"));
+  const mapDots = [...document.querySelectorAll("#map [data-st]")];
+  // Readouts only touch the DOM when their text changes.
+  const shown = new Map();
+  const put = (el, text) => { if (el && shown.get(el) !== text) { shown.set(el, text); el.textContent = text; } };
   if (ui.gpu) { ui.gpu.dataset.live = "1"; ui.gpu.textContent = `${gpu.name} · ${N.toLocaleString("en-US")} particles`; }
   cards.forEach((c) => c.querySelectorAll(".unit-body > *").forEach((el, i) => el.style.setProperty("--i", Math.min(i, 8))));
   const onState = cards.map(() => false);
@@ -156,9 +170,14 @@ export async function start() {
     ptr.x = (e.clientX / innerWidth) * 2 - 1; ptr.y = 1 - (e.clientY / innerHeight) * 2; ptr.s = 1;
   }, { passive: true });
 
+  // Layout is measured once per resize (in page coordinates) and offset by scrollY each frame,
+  // so the render loop never forces a layout.
+  const pageBox = (el) => { let top = 0, n = el; while (n) { top += n.offsetTop; n = n.offsetParent; } return { top, height: el.offsetHeight, left: el.offsetLeft, width: el.offsetWidth }; };
+  let L = {};
+  const measure = () => { L = { flights: flights.map((f) => f && pageBox(f)), cards: cards.map((c) => { const b = pageBox(c), r = c.getBoundingClientRect(); return { ...b, left: r.left, width: r.width }; }), max: Math.max(1, root.scrollHeight - innerHeight) }; };
   let vw = 0, vh = 0, dpr = 1, lensX = 0, lensY = 0;
   const resize = () => {
-    vw = innerWidth; vh = innerHeight; dpr = Math.min(devicePixelRatio || 1, coarse ? 1.5 : 1.75);
+    vw = innerWidth; vh = innerHeight; dpr = Math.min(devicePixelRatio || 1, 1.5);
     gpu.resize(Math.round(vw * dpr), Math.round(vh * dpr));
     // On wide screens the cards sit on the left, so the camera's lens shifts the sculpture into the space on the right.
     const r = cards[0].getBoundingClientRect();
@@ -166,12 +185,14 @@ export async function start() {
     lensY = vw >= 1100 ? 0 : 0.12;
   };
   resize();
-  addEventListener("resize", resize);
+  measure();
+  addEventListener("resize", () => { resize(); measure(); });
+  new ResizeObserver(measure).observe(document.querySelector("main"));
 
   const U = new Float32Array(UCOUNT * 4);
   const tanH = Math.tan((40 * Math.PI) / 360);
   const t0 = performance.now();
-  let last = t0, intro = 0, hidden = false;
+  let last = t0, intro = 0, hidden = false, lastUi = 0;
   document.addEventListener("visibilitychange", () => (hidden = document.hidden));
 
   function frame(now) {
@@ -182,11 +203,11 @@ export async function start() {
     intro = Math.min(1, intro + dt / 2.4);
 
     // Scroll: each flight spacer turns into progress from one station to the next.
+    const sy = scrollY;
     let P = 0, fk = -1, ff = 0;
-    flights.forEach((fl, k) => {
-      if (!fl) return;
-      const r = fl.getBoundingClientRect();
-      const f = clamp01((vh * 0.55 - r.top) / (r.height + vh * 0.15));
+    L.flights.forEach((r, k) => {
+      if (!r) return;
+      const f = clamp01((vh * 0.55 - (r.top - sy)) / (r.height + vh * 0.15));
       P += f;
       if (f > 0 && f < 1) { fk = k; ff = f; }
     });
@@ -205,17 +226,19 @@ export async function start() {
     ptr.sway[1] += (ptr.y - ptr.sway[1]) * Math.min(1, dt * 2);
 
     // Nullcolor: the stack lifts apart as its card scrolls through, and the timeline playhead follows.
-    const nr = cards[3].getBoundingClientRect();
-    const explode = smooth(0, 1, (vh * 0.7 - nr.top) / Math.max(nr.height * 0.6, 1));
-    if (ui.tl) {
-      ui.tl.style.setProperty("--t", explode.toFixed(4));
-      ui.tl.querySelectorAll(".trk[data-layer]").forEach((tr) => tr.classList.toggle("on", explode >= parseFloat(tr.style.getPropertyValue("--s"))));
-      const frames = Math.round(explode * 198);
-      ui.fr.textContent = String(frames).padStart(4, "0");
-      ui.tc.textContent = `00:00:${String(Math.floor(frames / 30)).padStart(2, "0")}:${String(frames % 30).padStart(2, "0")}`;
+    const nr = L.cards[3];
+    const explode = smooth(0, 1, (vh * 0.7 - (nr.top - sy)) / Math.max(nr.height * 0.6, 1));
+    const frames = Math.round(explode * 198);
+    if (ui.tl && shown.get(ui.tl) !== frames) {
+      shown.set(ui.tl, frames);
+      ui.tl.style.setProperty("--t", (frames / 198).toFixed(4));
+      tracks.forEach(([el, s0]) => el.classList.toggle("on", explode >= s0));
+      put(ui.fr, String(frames).padStart(4, "0"));
+      put(ui.tc, `00:00:${String(Math.floor(frames / 30)).padStart(2, "0")}:${String(frames % 30).padStart(2, "0")}`);
     }
 
-    const rc = cards[active].getBoundingClientRect();
+    const cb = L.cards[active];
+    const rc = { left: cb.left, right: cb.left + cb.width, top: cb.top - sy, bottom: cb.top - sy + cb.height };
     const rayD = norm(add(cam.fwd, add(mul(cam.right, (ptr.x - lensX) * tanH * aspect), mul(cam.up, (ptr.y - lensY) * tanH))));
     const VP = viewProj(cam, aspect, tanH, lensX, lensY);
     const pal = theme();
@@ -234,8 +257,8 @@ export async function start() {
     U.set(VP, 44);
     U.set(stationMatrix(cam.i, t, ptr.sway), 60);
     U.set(stationMatrix(cam.j, t, ptr.sway), 76);
-    pal.c.forEach((h, k) => U.set([...hex(h), 1], 92 + k * 4));
-    gpu.frame(U, hex(pal.clear));
+    pal.rgb.forEach((c, k) => U.set([...c, 1], 92 + k * 4));
+    gpu.frame(U, pal.bg);
 
     // Cards: content fades in once the particles have rebuilt its surface, and out as they leave.
     cards.forEach((c, k) => {
@@ -243,21 +266,22 @@ export async function start() {
       if (want !== onState[k]) { onState[k] = want; c.classList.toggle("on", want); }
     });
 
-    // Readouts
-    const doc = document.documentElement, max = Math.max(1, doc.scrollHeight - vh);
-    if (ui.pct) ui.pct.textContent = `STN ${String(active + 1).padStart(2, "0")}/06 · ${String(Math.round((scrollY / max) * 100)).padStart(3, "0")}%`;
-    if (ui.sec) ui.sec.textContent = fk > 0 ? `${CODES[fk - 1]} → ${CODES[fk]} · ${Math.round(ff * 100)}%` : `ONV · ${STATIONS[active].toUpperCase()}`;
+    // Readouts, ten times a second.
+    if (now - lastUi < 100) return;
+    lastUi = now;
+    put(ui.pct, `STN ${String(active + 1).padStart(2, "0")}/06 · ${String(Math.round((sy / L.max) * 100)).padStart(3, "0")}%`);
+    put(ui.sec, fk > 0 ? `${CODES[fk - 1]} → ${CODES[fk]} · ${Math.round(ff * 100)}%` : `ONV · ${STATIONS[active].toUpperCase()}`);
     const xyz = cam.pos.map((v) => (v >= 0 ? "+" : "") + v.toFixed(1)).join(" ");
-    if (ui.cam) ui.cam.textContent = `CAM ${xyz}`;
-    flights.forEach((fl, k) => { if (fl) fl.querySelector(".fl-xyz").textContent = xyz; });
+    put(ui.cam, `CAM ${xyz}`);
+    if (fk > 0) put(xyzEls[fk - 1], xyz);
     if (ui.map) {
-      const mx = (p) => 66 + p[0] * 2.8, mz = (p) => 66 + p[2] * 2.8;
-      ui.map.setAttribute("cx", mx(cam.pos).toFixed(1)); ui.map.setAttribute("cy", mz(cam.pos).toFixed(1));
+      const mx = (p) => (66 + p[0] * 2.8).toFixed(1), mz = (p) => (66 + p[2] * 2.8).toFixed(1);
       const tip = add(cam.pos, mul(cam.fwd, 5));
-      ui.cone.setAttribute("x1", mx(cam.pos).toFixed(1)); ui.cone.setAttribute("y1", mz(cam.pos).toFixed(1));
-      ui.cone.setAttribute("x2", mx(tip).toFixed(1)); ui.cone.setAttribute("y2", mz(tip).toFixed(1));
+      ui.map.setAttribute("cx", mx(cam.pos)); ui.map.setAttribute("cy", mz(cam.pos));
+      ui.cone.setAttribute("x1", mx(cam.pos)); ui.cone.setAttribute("y1", mz(cam.pos));
+      ui.cone.setAttribute("x2", mx(tip)); ui.cone.setAttribute("y2", mz(tip));
     }
-    document.querySelectorAll("#map [data-st]").forEach((g) => g.classList.toggle("on", +g.dataset.st === active));
+    if (shown.get(mapDots) !== active) { shown.set(mapDots, active); mapDots.forEach((g) => g.classList.toggle("on", +g.dataset.st === active)); }
   }
   requestAnimationFrame(frame);
 }
