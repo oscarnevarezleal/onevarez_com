@@ -1,7 +1,7 @@
 // Station sculptures: one particle target per particle per station, in station-local space (about ±2.4 units).
 // Each target is [x, y, z, w]. w packs the colour, the Nullcolor layer and an orbit flag: w = palette + 16 * (layer + 1)
-// + 128 * orbit. Orbit 1 circles the local y axis in the shader (faster near the centre); orbit 2 slides along the
-// hero's conveyor. A negative w marks
+// + 128 * orbit. Orbit 1 circles the local y axis in the shader (faster near the centre); orbit 3 marks the hero's
+// morphing form, whose xyz are seeds rather than a position. A negative w marks
 // world-space dust (palette = -w - 1), which stays put across stations and gives the flights depth.
 // Palette: 0 ink, 1 signal, 2 lime, 3 muted, 4 slate, 5 blue, 6 green, 7 sand, 8-11 spare.
 
@@ -49,45 +49,14 @@ const bez = (a, b, c, d, t) => {
 };
 const W = (p, pal, level = 0, orbit = 0) => [p[0], p[1], p[2], pal + 16 * level + 128 * orbit];
 
-// 0 · Hero: a software assembly line, kept minimal. One line runs through three rings (design, build, ship); a
-// stream of raw dust goes in, and between the rings it is a sphere, then a cube, then a finished UI card. The signal
-// packets carry orbit flag 2, which slides them along the line in the shader.
+// 0 · Hero: one large form that cycles through the headline: a loose cloud (conceived), a cube (built) and a UI card
+// (transformed). The shapes are computed in the shader (orbit flag 3); each target here only carries three random
+// seeds that fix the particle's place in every shape.
 function hero() {
-  const X0 = -3.2, X1 = 3.4, rings = [-1.4, 0.5, 2.3];
-  const path = (x) => 0.18 * Math.sin(x * 0.9);
-  const line = (r) => { const x = X0 + r() * (X1 - X0); return W([x, 0, path(x)], 3); };
-  const ring = (r) => {
-    const x = rings[Math.floor(r() * 3)], a = r() * Math.PI * 2;
-    return W([x, 0.42 + Math.cos(a) * 0.62, path(x) + Math.sin(a) * 0.62], 1);
-  };
-  const dust = (r) => {
-    // A loose cloud on the left that narrows into the first ring.
-    const x = X0 + r() * (rings[0] - 0.2 - X0), t = (x - X0) / (rings[0] - X0), w = 0.55 * (1 - t) + 0.08;
-    return W([x, 0.42 + jit(r, w), path(x) + jit(r, w)], r() < 0.75 ? 0 : 1);
-  };
-  const ball = (r) => { const x = (rings[0] + rings[1]) / 2, p = sphere(r, [x, 0.42, path(x)], 0.36); return W(p, 0); };
-  const cube = (r) => {
-    const x = (rings[1] + rings[2]) / 2, h = 0.32, f = Math.floor(r() * 6), a = jit(r, h), b = jit(r, h);
-    const p = [[h, a, b], [-h, a, b], [a, h, b], [a, -h, b], [a, b, h], [a, b, -h]][f];
-    return W([x + p[0], 0.42 + p[1], path(x) + p[2]], 0);
-  };
-  const card = (r) => {
-    // A standing UI card facing the viewer: outline, title bar, three text lines and a signal button.
-    const x = 3.15, w = 0.42, h = 0.5, m = r();
-    let u, v, pal = 0;
-    if (m < 0.42) { const e = r() * 4, f = r() * 2 - 1; [u, v] = e < 1 ? [f * w, h] : e < 2 ? [f * w, -h] : e < 3 ? [w, f * h] : [-w, f * h]; }
-    else if (m < 0.55) { u = jit(r, w); v = h - 0.12; }
-    else if (m < 0.82) { const k = Math.floor(r() * 3); u = -w + 0.09 + r() * (k === 2 ? 0.4 : 0.66); v = h - 0.26 - k * 0.14; pal = 3; }
-    else { u = w - 0.3 + r() * 0.22; v = -h + 0.13 + jit(r, 0.035); pal = 1; }
-    return W([x + u * 1.25, 0.42 + v, path(x) + jit(r, 0.004)], pal);
-  };
-  const packets = (r) => { const k = Math.floor(r() * 7), x = X0 + k * 0.94; return W([x + jit(r, 0.02), jit(r, 0.02), path(x) + jit(r, 0.02)], 1, 0, 2); };
-  // Laid out on a long x axis, then squeezed by 0.75 so it fits beside the card.
-  const mix = mixer([
-    [0.1, line], [0.12, ring], [0.17, dust], [0.15, ball], [0.15, cube], [0.2, card], [0.04, packets],
-    [0.07, (r) => W(sphere(r, [0, 0, 0], 4.5 + r() * 2.5), 3)],
+  return mixer([
+    [0.94, (r) => [r(), r(), r(), 128 * 3]],
+    [0.06, (r) => W(sphere(r, [0, 0, 0], 4.5 + r() * 2.5), 3)],
   ]);
-  return (r) => { const p = mix(r); p[0] *= 0.75; return p; };
 }
 
 // 1 · Services: documents in, a model router in the middle, a platform rack out.

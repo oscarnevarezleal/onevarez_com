@@ -4,7 +4,7 @@
 //  8 card rect in NDC (x0, y0, x1, y1)                     9 ray origin, strength  10 ray dir, unused
 // 11-14 view-projection      15-18 current station matrix  19-22 next station matrix  23-34 palette
 // Targets pack w = palette + 16 * layer + 128 * orbit (orbit 1 circles the local y axis, faster near the centre);
-// orbit 2 slides along the hero's conveyor. Particle state packs w = palette + 16 * surface flag. Palette has 12 slots.
+// orbit 3 is the hero's morphing form (xyz hold seeds). Particle state packs w = palette + 16 * surface flag. Palette has 12 slots.
 // A particle eases toward its goal on the current or next station (handing over as f passes its own threshold),
 // rides a divergence-free flow field that swells during a flight, and every fourth particle can leave its sculpture
 // to rebuild the active card: its outline and a dot grid behind the text, placed by unprojecting the card's screen rect.
@@ -24,6 +24,29 @@ vec3 flow(vec3 q, float t) {
   return vec3(sin(p.y * 1.7 + t * 0.6) + 0.5 * sin(p.z * 2.9 - t * 0.4),
               sin(p.z * 1.9 + t * 0.5) + 0.5 * sin(p.x * 3.1 + t * 0.3),
               sin(p.x * 1.6 - t * 0.7) + 0.5 * sin(p.y * 2.7 + t * 0.5));
+}
+// The hero form for phase k (0 cloud, 1 cube, 2 card) from a particle's three seeds; w is its palette slot.
+vec4 heroShape(float k, vec3 sd) {
+  if (k < 0.5) {
+    float z = sd.y * 2.0 - 1.0, a = sd.z * 6.2832, q = sqrt(1.0 - z * z), r = 0.5 + 1.5 * pow(sd.x, 0.6);
+    return vec4(r * q * cos(a), r * z, r * q * sin(a), sd.z < 0.08 ? 1.0 : 0.0);
+  }
+  if (k < 1.5) {
+    float f = floor(sd.z * 6.0), e = fract(sd.z * 6.0), h = 1.2;
+    float a = sd.x * 2.0 - 1.0, b = sd.y * 2.0 - 1.0;
+    if (e < 0.35) a = sign(a);
+    vec3 p = f < 1.0 ? vec3(1.0, a, b) : f < 2.0 ? vec3(-1.0, a, b) : f < 3.0 ? vec3(a, 1.0, b) : f < 4.0 ? vec3(a, -1.0, b) : f < 5.0 ? vec3(a, b, 1.0) : vec3(a, b, -1.0);
+    return vec4(p * h, 0.0);
+  }
+  float w = 1.75, h = 1.15, m = sd.z;
+  if (m < 0.38) {
+    float per = sd.x * 4.0, s2 = sd.y * 2.0 - 1.0;
+    vec2 q = per < 1.0 ? vec2(s2 * w, h) : per < 2.0 ? vec2(s2 * w, -h) : per < 3.0 ? vec2(w, s2 * h) : vec2(-w, s2 * h);
+    return vec4(q, 0.0, 0.0);
+  }
+  if (m < 0.5) return vec4((sd.x * 2.0 - 1.0) * w, h - 0.32, 0.0, 0.0);
+  if (m < 0.86) { float ln = floor(sd.y * 3.0); return vec4(-w + 0.25 + sd.x * (ln == 2.0 ? 1.6 : 2.8), h - 0.68 - ln * 0.36, 0.0, 3.0); }
+  return vec4(w - 1.0 + sd.x * 0.75, -h + 0.22 + sd.y * 0.28, 0.0, 1.0);
 }
 vec3 xf(int c, vec3 l) { return U[c].xyz * l.x + U[c + 1].xyz * l.y + U[c + 2].xyz * l.z + U[c + 3].xyz; }
 void main() {
@@ -45,7 +68,12 @@ void main() {
     float lv = floor(rest / 16.0); pal = rest - lv * 16.0;
     vec3 l = tg.xyz; if (lv > 0.0) { l.y += (lv - 3.5) * U[7].y * 0.5; }
     if (orb == 1.0) { float a = t * 1.1 / pow(max(length(l.xz), 0.6), 1.5), c = cos(a), sn = sin(a); l.xz = vec2(c * l.x - sn * l.z, sn * l.x + c * l.z); }
-    if (orb == 2.0) { l.x = -2.4 + mod(l.x + 2.4 + t * 0.26, 4.95); }
+    if (orb == 3.0) {
+      // Hold each form, then morph into the next over the last part of its 3.6 s slot.
+      float ph = mod(t / 3.6, 3.0), k = floor(ph), f = smoothstep(0.6, 1.0, fract(ph));
+      vec4 A = heroShape(k, tg.xyz), B = heroShape(mod(k + 1.0, 3.0), tg.xyz);
+      l = mix(A.xyz, B.xyz, f); pal = f < 0.5 ? A.w : B.w;
+    }
     goal = xf(useNext ? 19 : 15, l);
     if ((i & 3u) == 0u && U[7].x > 0.05 + 0.9 * h2) {
       uint j = i >> 2u, M = N >> 2u, Mp = M * 3u / 10u;
@@ -133,6 +161,32 @@ fn flow(q: vec3f, t: f32) -> vec3f {
                sin(p.z * 1.9 + t * 0.5) + 0.5 * sin(p.x * 3.1 + t * 0.3),
                sin(p.x * 1.6 - t * 0.7) + 0.5 * sin(p.y * 2.7 + t * 0.5));
 }
+// The hero form for phase k (0 cloud, 1 cube, 2 card) from a particle's three seeds; w is its palette slot.
+fn heroShape(k: f32, sd: vec3f) -> vec4f {
+  if (k < 0.5) {
+    let z = sd.y * 2.0 - 1.0; let a = sd.z * 6.2832; let q = sqrt(1.0 - z * z); let r = 0.5 + 1.5 * pow(sd.x, 0.6);
+    return vec4f(r * q * cos(a), r * z, r * q * sin(a), select(0.0, 1.0, sd.z < 0.08));
+  }
+  if (k < 1.5) {
+    let f = floor(sd.z * 6.0); let e = fract(sd.z * 6.0); let h = 1.2;
+    var a = sd.x * 2.0 - 1.0; let b = sd.y * 2.0 - 1.0;
+    if (e < 0.35) { a = sign(a); }
+    var p: vec3f;
+    if (f < 1.0) { p = vec3f(1.0, a, b); } else if (f < 2.0) { p = vec3f(-1.0, a, b); } else if (f < 3.0) { p = vec3f(a, 1.0, b); }
+    else if (f < 4.0) { p = vec3f(a, -1.0, b); } else if (f < 5.0) { p = vec3f(a, b, 1.0); } else { p = vec3f(a, b, -1.0); }
+    return vec4f(p * h, 0.0);
+  }
+  let w = 1.75; let h = 1.15; let m = sd.z;
+  if (m < 0.38) {
+    let per = sd.x * 4.0; let s2 = sd.y * 2.0 - 1.0;
+    var q: vec2f;
+    if (per < 1.0) { q = vec2f(s2 * w, h); } else if (per < 2.0) { q = vec2f(s2 * w, -h); } else if (per < 3.0) { q = vec2f(w, s2 * h); } else { q = vec2f(-w, s2 * h); }
+    return vec4f(q, 0.0, 0.0);
+  }
+  if (m < 0.5) { return vec4f((sd.x * 2.0 - 1.0) * w, h - 0.32, 0.0, 0.0); }
+  if (m < 0.86) { let ln = floor(sd.y * 3.0); return vec4f(-w + 0.25 + sd.x * select(2.8, 1.6, ln == 2.0), h - 0.68 - ln * 0.36, 0.0, 3.0); }
+  return vec4f(w - 1.0 + sd.x * 0.75, -h + 0.22 + sd.y * 0.28, 0.0, 1.0);
+}
 fn xf(c: u32, l: vec3f) -> vec3f { return U[c].xyz * l.x + U[c + 1u].xyz * l.y + U[c + 2u].xyz * l.z + U[c + 3u].xyz; }
 
 @compute @workgroup_size(256)
@@ -154,7 +208,12 @@ fn sim(@builtin(global_invocation_id) gid: vec3u) {
     let lv = floor(rest / 16.0); pal = rest - lv * 16.0;
     var l = tg.xyz; if (lv > 0.0) { l.y += (lv - 3.5) * U[7].y * 0.5; }
     if (orb == 1.0) { let a = t * 1.1 / pow(max(length(l.xz), 0.6), 1.5); let c = cos(a); let sn = sin(a); l = vec3f(c * l.x - sn * l.z, l.y, sn * l.x + c * l.z); }
-    if (orb == 2.0) { l.x = -2.4 + (l.x + 2.4 + t * 0.26) % 4.95; }
+    if (orb == 3.0) {
+      // Hold each form, then morph into the next over the last part of its 3.6 s slot.
+      let ph = (t / 3.6) % 3.0; let k = floor(ph); let f = smoothstep(0.6, 1.0, fract(ph));
+      let A = heroShape(k, tg.xyz); let B = heroShape((k + 1.0) % 3.0, tg.xyz);
+      l = mix(A.xyz, B.xyz, f); pal = select(B.w, A.w, f < 0.5);
+    }
     goal = xf(select(15u, 19u, useNext), l);
     if ((i & 3u) == 0u && U[7].x > 0.05 + 0.9 * h2) {
       let j = i >> 2u; let M = N >> 2u; let Mp = M * 3u / 10u;

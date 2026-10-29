@@ -8,7 +8,7 @@ Every section is a station in one particle space. Scrolling through the gap betw
 
 | Station | Sculpture |
 | --- | --- |
-| Hero | A minimal assembly line: raw dust passes three rings and becomes a sphere, a cube, then a finished UI card |
+| Hero | One form that cycles through the headline: a loose cloud (conceived), a cube (built), a UI card (transformed) |
 | Services | Documents feeding a model router, then a platform rack |
 | Work | Freight arcs over a terrain grid, and a capsule for the pharmacy |
 | Nullcolor | The six layers Kineto composites, lifting apart as the timeline plays |

@@ -11,8 +11,10 @@ const coarse = matchMedia("(pointer: coarse)").matches || innerWidth < 760;
 const cap = (n) => Math.min(n, 2 ** Math.round(Math.log2(Math.max(1024, +params.get("n") || n))));
 
 const CODES = ["ONV", "SVC", "WRK", "NCL", "ABT", "CTC"];
+const PHASES = ["Form · conceived", "Form · built", "Form · transformed"];
+const PHASES_ES = ["Forma · concebida", "Forma · construida", "Forma · transformada"];
 // Each station's sculpture is posed (pitch, yaw, roll) so its best side faces the camera.
-const POSES = [[0.5, 0.62, 0], [0.22, -0.25, 0], [0.42, -0.35, 0], [0.62, -0.5, 0.04], [0.08, 0.1, 0.12], [0.06, -0.15, 0]];
+const POSES = [[0.22, -0.45, 0], [0.22, -0.25, 0], [0.42, -0.35, 0], [0.62, -0.5, 0.04], [0.08, 0.1, 0.12], [0.06, -0.15, 0]];
 
 /* ---------- small vector kit ---------- */
 const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
@@ -47,9 +49,10 @@ const ST = STATIONS.map((name, k) => {
 // Station matrix (column-major): translate(T) * basis * pose(t) * scale.
 function stationMatrix(k, t, sway) {
   const s = ST[k], P = POSES[k];
-  const amt = k === 0 ? 0.5 : 1;
-  const cols = euler([P[0] + sway[1] * 0.12 * amt, P[1] + (Math.sin(t * 0.21 + k) * 0.22 + sway[0] * 0.2) * amt, P[2]]);
-  const [bx, by, bz] = s.basis, sc = k === 0 ? 0.72 : 0.92;
+  // The hero form turns slowly the whole way round; the other sculptures only sway.
+  const yaw = k === 0 ? t * 0.18 : Math.sin(t * 0.21 + k) * 0.22;
+  const cols = euler([P[0] + sway[1] * 0.12, P[1] + yaw + sway[0] * 0.2, P[2]]);
+  const [bx, by, bz] = s.basis, sc = 0.92;
   const m = new Float32Array(16);
   cols.forEach((c, i) => {
     const w = add(add(mul(bx, c[0]), mul(by, c[1])), mul(bz, c[2]));
@@ -139,7 +142,7 @@ export async function start() {
   if (!gpu) return staticReason(failures.join(" · ") || "no WebGL2");
   const N = gpu.N;
   gpu.setTargets(buildTargets(N));
-  // Start as a wide cloud around the first station, so the intro condenses into the assembly line.
+  // Start as a wide cloud around the first station, so the intro condenses into the hero form.
   const init = new Float32Array(N * 4);
   for (let i = 0; i < N; i++) {
     const z = Math.random() * 2 - 1, a = Math.random() * 6.283, r = 6 + Math.random() * 16, q = Math.sqrt(1 - z * z);
@@ -152,7 +155,7 @@ export async function start() {
   const cards = sections.map((s) => s.querySelector(".unit"));
   const flights = sections.map((s) => s.previousElementSibling?.classList.contains("flight") ? s.previousElementSibling : null);
   const $ = (id) => document.getElementById(id);
-  const ui = { pct: $("scrollp"), sec: $("secname"), gpu: $("rd-gpu"), cam: $("rd-cam"), map: $("map-cam"), cone: $("map-cone"), tl: $("tl"), tc: $("tc"), fr: $("fr") };
+  const ui = { phase: $("rd-phase"), pct: $("scrollp"), sec: $("secname"), gpu: $("rd-gpu"), cam: $("rd-cam"), map: $("map-cam"), cone: $("map-cone"), tl: $("tl"), tc: $("tc"), fr: $("fr") };
   const tracks = ui.tl ? [...ui.tl.querySelectorAll(".trk[data-layer]")].map((el) => [el, parseFloat(el.style.getPropertyValue("--s"))]) : [];
   const xyzEls = flights.filter(Boolean).map((fl) => fl.querySelector(".fl-xyz"));
   const mapDots = [...document.querySelectorAll("#map [data-st]")];
@@ -272,6 +275,8 @@ export async function start() {
     put(ui.sec, fk > 0 ? `${CODES[fk - 1]} → ${CODES[fk]} · ${Math.round(ff * 100)}%` : `ONV · ${STATIONS[active].toUpperCase()}`);
     const xyz = cam.pos.map((v) => (v >= 0 ? "+" : "") + v.toFixed(1)).join(" ");
     put(ui.cam, `CAM ${xyz}`);
+    // The hero form's phase, named after the headline (same clock as the shader).
+    put(ui.phase, (root.lang === "es" ? PHASES_ES : PHASES)[Math.floor((t / 3.6) % 3)]);
     if (fk > 0) put(xyzEls[fk - 1], xyz);
     if (ui.map) {
       const mx = (p) => (66 + p[0] * 2.8).toFixed(1), mz = (p) => (66 + p[2] * 2.8).toFixed(1);
