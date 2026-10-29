@@ -18,7 +18,7 @@ Every section is a station in one particle space. Scrolling through the gap betw
 - `assets/front/main.js`: stations, camera path, scroll mapping, card reconstruction, readouts and the station map.
 - `assets/front/shapes.js`: the particle targets for each sculpture.
 - `assets/front/shaders.js`: the particle step and draw in WGSL and in GLSL ES 3.0, sharing one uniform layout.
-- `assets/front/webgpu.js` (compute pass plus instanced quads) is used first; `assets/front/webgl2.js` (ping-pong float textures) is the fallback.
+- `assets/front/webgl2.js` (ping-pong float textures) is the default renderer. `assets/front/webgpu.js` (compute pass plus instanced quads) runs with `?gl=webgpu` while it is being checked on real hardware.
 - With reduced motion, no WebGPU or WebGL2, or no JavaScript, the page is the plain card layout with every card shown.
 - Testing: `?gl=webgl2`, `?gl=webgpu` or `?gl=off` forces a path, and `?n=8192` caps the particle count.
 

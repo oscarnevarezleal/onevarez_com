@@ -105,7 +105,8 @@ async function backend() {
   const force = params.get("gl");
   const host = document.getElementById("stage");
   const fresh = () => { const c = document.createElement("canvas"); c.setAttribute("aria-hidden", "true"); host.replaceChildren(c); return c; };
-  if (force !== "webgl2" && navigator.gpu) {
+  // WebGL2 is the default until the WebGPU path is confirmed on real hardware; ?gl=webgpu opts in.
+  if (force === "webgpu" && navigator.gpu) {
     try { return await (await import("./webgpu.js")).create(fresh(), cap(coarse ? 65536 : 131072)); }
     catch (e) { console.warn("WebGPU unavailable, trying WebGL2:", e.message); }
   }
