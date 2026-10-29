@@ -619,9 +619,9 @@ html.gpu .unit.on::after { animation: scan 1s cubic-bezier(.7, 0, .2, 1) both; }
 })();
 </script>
 <script type="module">
-  import { start, drawMap } from "./assets/front/main.js";
+  import { start, drawMap, staticReason } from "./assets/front/main.js";
   drawMap();
-  start();
+  start().catch((e) => { console.error(e); document.documentElement.classList.remove("gpu"); staticReason(e.message); });
 </script>
 
 </body>

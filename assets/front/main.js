@@ -100,7 +100,14 @@ const PAL = {
 const darkQ = matchMedia("(prefers-color-scheme: dark)");
 const theme = () => (root.dataset.theme || (darkQ.matches ? "dark" : "light")) === "dark" ? PAL.dark : PAL.light;
 
+// Static fallback: say why in the hero readout, so a screenshot is enough to diagnose it.
+export function staticReason(text) {
+  const el = document.getElementById("rd-gpu");
+  if (el) { el.dataset.live = "1"; el.textContent = `Static render · ${text}`; }
+}
+
 /* ---------- backend ---------- */
+const failures = [];
 async function backend() {
   const force = params.get("gl");
   const host = document.getElementById("stage");
@@ -108,20 +115,21 @@ async function backend() {
   // WebGL2 is the default until the WebGPU path is confirmed on real hardware; ?gl=webgpu opts in.
   if (force === "webgpu" && navigator.gpu) {
     try { return await (await import("./webgpu.js")).create(fresh(), cap(coarse ? 65536 : 131072)); }
-    catch (e) { console.warn("WebGPU unavailable, trying WebGL2:", e.message); }
+    catch (e) { console.warn("WebGPU unavailable, trying WebGL2:", e.message); failures.push(`WebGPU: ${e.message}`); }
   }
   if (force !== "webgpu") {
     try { return (await import("./webgl2.js")).create(fresh(), cap(coarse ? 32768 : 65536)); }
-    catch (e) { console.warn("WebGL2 unavailable:", e.message); }
+    catch (e) { console.warn("WebGL2 unavailable:", e.message); failures.push(`WebGL2: ${e.message}`); }
   }
   host.replaceChildren();
   return null;
 }
 
 export async function start() {
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches || params.get("gl") === "off") return;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches && params.get("motion") !== "on") return staticReason("reduced motion is on");
+  if (params.get("gl") === "off") return staticReason("?gl=off");
   const gpu = await backend();
-  if (!gpu) return;
+  if (!gpu) return staticReason(failures.join(" · ") || "no WebGL2");
   const N = gpu.N;
   gpu.setTargets(buildTargets(N));
   // Start as a wide cloud around the first station, so the intro condenses into the mark.
